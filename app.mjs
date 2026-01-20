@@ -90,76 +90,84 @@ function downloadSubmission(content) {
     URL.revokeObjectURL(url);
 }
 
+document.getElementById("run").addEventListener("click", async () => {
+    await run();
+})
+
 document.addEventListener("keydown", async (e) => {
 
     if (e.ctrlKey && e.key == "r") {
-        editor.save()
-        carRow = startRow;
-        carColumn = startCol;
-        carDirection = startDirection;
-        actionStack = [];
-        let code = editor.getValue();
-        eval(code);
-
-        console.clear();
-        carRow = startRow;
-        carColumn = startCol;
-        prevCarColumn = carColumn;
-        prevCarRow = carRow;
-        carDirection = startDirection;
-        crashes = 0;
-        actions = 0;
-        crash = false;
-        for (let fn of actionStack) {
-            eval(`(()=> { _${fn}();})()`);
-
-            if (_map[carRow][carColumn] != " ") {
-                crash = true;
-                console.log("location", carRow, carColumn, _map[carRow][carColumn]);
-                carRow = prevCarRow;
-                carColumn = prevCarColumn;
-                crashes++;
-            }
-
-            await sleep(200);
-            draw();
-        }
-
-        console.log("Car dir", carDirection);
-        _map.forEach(item => console.log(item.length));
-
-        let attGoal = carRow == goalRow && carColumn == goalCol;
-
-        if (attGoal) {
-            confetti({ position: { x: orgWidth, y: orgHeight } });
-            setTimeout(() => {
-                localStorage.setItem(`solution_${mapIndex}`, editor.getValue());
-                mapIndex++
-                if (mapIndex < MAPS.length) {
-                    loadMap(MAPS[mapIndex]);
-                    draw();
-                    editor.setValue("");
-                } else {
-                    document.body.innerHTML = "";
-                    for (let i = 0; i < MAPS.length; i++) {
-                        document.body.innerText += localStorage.getItem(`solution_${i}`) + "\n";
-                    }
-                }
-            }, 5000);
-        } else {
-            setTimeout(() => {
-                crash = false;
-                loadMap(MAPS[mapIndex]);
-                draw();
-            }, 3000);
-        }
-
-        console.log("Number of actions:", actions);
-        console.log("Number of crashes:", crashes);
-        console.log("At goal: ", attGoal ? "yes" : "no");
+        await run();
     }
 
 });
+
+async function run() {
+    editor.save()
+    carRow = startRow;
+    carColumn = startCol;
+    carDirection = startDirection;
+    actionStack = [];
+    let code = editor.getValue();
+    eval(code);
+
+    console.clear();
+    carRow = startRow;
+    carColumn = startCol;
+    prevCarColumn = carColumn;
+    prevCarRow = carRow;
+    carDirection = startDirection;
+    crashes = 0;
+    actions = 0;
+    crash = false;
+    for (let fn of actionStack) {
+        eval(`(()=> { _${fn}();})()`);
+
+        if (_map[carRow][carColumn] != " ") {
+            crash = true;
+            console.log("location", carRow, carColumn, _map[carRow][carColumn]);
+            carRow = prevCarRow;
+            carColumn = prevCarColumn;
+            crashes++;
+        }
+
+        await sleep(200);
+        draw();
+    }
+
+    console.log("Car dir", carDirection);
+    _map.forEach(item => console.log(item.length));
+
+    let attGoal = carRow == goalRow && carColumn == goalCol;
+
+    if (attGoal) {
+        confetti({ position: { x: orgWidth, y: orgHeight } });
+        setTimeout(() => {
+            localStorage.setItem(`solution_${mapIndex}`, editor.getValue());
+            mapIndex++
+            if (mapIndex < MAPS.length) {
+                loadMap(MAPS[mapIndex]);
+                draw();
+                editor.setValue("");
+            } else {
+                document.body.innerHTML = "";
+                for (let i = 0; i < MAPS.length; i++) {
+                    document.body.innerText += localStorage.getItem(`solution_${i}`) + "\n";
+                }
+            }
+        }, 5000);
+    } else {
+        setTimeout(() => {
+            crash = false;
+            loadMap(MAPS[mapIndex]);
+            draw();
+        }, 3000);
+    }
+
+    console.log("Number of actions:", actions);
+    console.log("Number of crashes:", crashes);
+    console.log("At goal: ", attGoal ? "yes" : "no");
+}
 
 
 function loadMap(data) {
